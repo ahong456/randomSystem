@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机点名</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    
+    <div id="app">
+        <div class="random-call" v-cloak>
+            <div class="random-call-blackboard">
+                <div class="bg"><img src="./img/a.jpg" alt=""></div>
+                <div class="random-call-content">
+                    <h3 class="student-title" v-if="btnConten != '暂停'" >{{title}}</h3>
+                    <div class="student-user" v-if="isShow">
+                        <!-- <div class="userImg"><img :src="studentUser.img" alt=""></div> -->
+                        <div class="student-result">
+                            <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1024 1024" data-v-d2e47025=""><path fill="currentColor" d="M918.4 201.6c-6.4-6.4-12.8-9.6-22.4-9.6H768V96c0-9.6-3.2-16-9.6-22.4C752 67.2 745.6 64 736 64H288c-9.6 0-16 3.2-22.4 9.6C259.2 80 256 86.4 256 96v96H128c-9.6 0-16 3.2-22.4 9.6-6.4 6.4-9.6 16-9.6 22.4 3.2 108.8 25.6 185.6 64 224 34.4 34.4 77.56 55.65 127.65 61.99 10.91 20.44 24.78 39.25 41.95 56.41 40.86 40.86 91 65.47 150.4 71.9V768h-96c-9.6 0-16 3.2-22.4 9.6-6.4 6.4-9.6 12.8-9.6 22.4s3.2 16 9.6 22.4c6.4 6.4 12.8 9.6 22.4 9.6h256c9.6 0 16-3.2 22.4-9.6 6.4-6.4 9.6-12.8 9.6-22.4s-3.2-16-9.6-22.4c-6.4-6.4-12.8-9.6-22.4-9.6h-96V637.26c59.4-7.71 109.54-30.01 150.4-70.86 17.2-17.2 31.51-36.06 42.81-56.55 48.93-6.51 90.02-27.7 126.79-61.85 38.4-38.4 60.8-112 64-224 0-6.4-3.2-16-9.6-22.4zM256 438.4c-19.2-6.4-35.2-19.2-51.2-35.2-22.4-22.4-35.2-70.4-41.6-147.2H256zm390.4 80C608 553.6 566.4 576 512 576s-99.2-19.2-134.4-57.6C342.4 480 320 438.4 320 384V128h384v256c0 54.4-19.2 99.2-57.6 134.4m172.8-115.2c-16 16-32 25.6-51.2 35.2V256h92.8c-6.4 76.8-19.2 124.8-41.6 147.2zM768 896H256c-9.6 0-16 3.2-22.4 9.6-6.4 6.4-9.6 12.8-9.6 22.4s3.2 16 9.6 22.4c6.4 6.4 12.8 9.6 22.4 9.6h512c9.6 0 16-3.2 22.4-9.6 6.4-6.4 9.6-12.8 9.6-22.4s-3.2-16-9.6-22.4c-6.4-6.4-12.8-9.6-22.4-9.6"></path></svg>
+                            <h3 :class="{'h3Hover':isBorder}">{{studentUser.name}}</h3>
+                        </div>
+                    </div>
+                    <div class="random-call-btn">
+                        <button @click="btnFun">{{btnConten}}</button>
+                    </div>
+                </div>
+            </div>
+            <div class="random-callr-student">
+                <div class="student-content" v-for="item in studentData" :key="item.id">
+                    <!-- <div class="img"><img :src="item.img" alt=""></div> -->
+                    <h5>{{item.name}}</h5>
+                </div>
+            </div>
+        </div>
+        <div id="musicCtrl" :class="['mRt',{'mAnim': ismAnim}]"></div>
+        <div class="music-tip">Music by DanoSongs</div>
+    </div>
+    <script src="./js/vue.js"></script>
+    <script type="module">
+        import {studentData} from './student-js/student.js'
+        let timer 
+        const musicUrl = "./audio/Anime-World-We-Are-Heroes.mp3?v=2"
+        let audio = new Audio(musicUrl)
+        let musicDom = document.querySelector("#musicCtrl")
+        audio.setAttribute("autoplay", "autoplay");
+        audio.setAttribute("loop", "loop");
+        const { createApp } = Vue
+        createApp({
+          data() {
+            return {
+                studentUser: {
+                    name:'',
+                    img:'',
+                    id: ''
+                },
+                isShow: false,
+                btnConten: '开始',
+                title: '准备好了吗 ?',
+                studentData,
+                okArr: [],
+                sjVal: -1,
+                ismAnim: false,
+                isBorder: false
+            }
+          },
+          methods: {
+            getRndInteger (min, max) {
+                const num = Math.floor(Math.random() * (max - min + 1) ) + min
+                if (this.sjVal != -1 && num == this.sjVal) {
+                    return this.getRndInteger(min, max)
+                }
+                this.sjVal = num
+                return num
+            },
+            btnFun() {
+                if (this.btnConten == '开始') {
+                    this.startFun()
+                    this.isShow = true
+                    this.btnConten = '暂停'
+                    this.audioPlay()
+                    return false
+                }
+                if (this.btnConten == '再来一次') {
+                    this.audioPlay()
+                    const idx = this.studentData.findIndex(item => item.id == this.studentUser.id)
+                    if (idx >= 0) this.studentData.splice(idx, 1)
+                    this.studentUser = {
+                        name:'',
+                        img:'',
+                        id: ''
+                    }
+                    this.btnConten = '暂停'
+                    this.startFun()
+                    if (this.studentData.length < 2) {
+                        setTimeout(() => {
+                            this.btnFun()
+                        }, 1000)
+                    }
+                    return false
+                }
+                if (this.btnConten == '暂停') {
+                    this.endFun()
+                    this.btnConten = this.studentData.length < 2 ? '已结束，刷新重来' : '再来一次'
+                    this.title = '恭喜你中奖了'
+                    this.audioPause()
+                    return false
+                }
+                if (this.btnConten == '已结束，刷新重来') {
+                    location.reload()
+                    return false
+                }
+            },
+            startFun() {
+                this.run()
+                timer = setInterval(() => {
+                    this.run()
+                }, 400)
+            },
+            run() {
+                if (this.studentData.length < 2) {
+                    this.studentUser = this.studentData[0]
+                    return
+                }
+                let num = this.getRndInteger(0, this.studentData.length - 1)
+                this.studentUser = this.studentData[num]
+            },
+            endFun() {
+                clearInterval(timer);
+            },
+            // 播放音乐
+            audioPlay() {
+                audio.load(); 
+                audio.play();
+                this.isBorder = false
+                this.ismAnim = true
+            },
+            // 暂停音乐
+            audioPause() {
+                audio.pause()
+                this.ismAnim = false
+                this.isBorder = true
+            }
+          }
+        }).mount('#app')
+    </script>
+       
+</body>
+</html>
+
